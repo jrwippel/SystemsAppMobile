@@ -14,7 +14,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
 Future<void> login() async {
   final response = await http.post(
-    Uri.parse('http://localhost:8000/api/ApiLogin/login'),
+    Uri.parse('http://10.0.2.2:8000/api/ApiLogin/login'),
+//    Uri.parse('http://localhost:8000/api/ApiLogin/login'),
     headers: <String, String>{
       'Content-Type': 'application/json; charset=UTF-8',
     },
@@ -52,7 +53,7 @@ Future<void> login() async {
             children: <Widget>[
               TextFormField(
                 controller: _emailController,
-                decoration: InputDecoration(labelText: "Email"),
+                decoration: InputDecoration(labelText: "Usuário"),
                 keyboardType: TextInputType.emailAddress,
                 validator: (value) {
                   if (value == null || value.isEmpty) {

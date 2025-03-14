@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'dart:convert'; // Para converter a resposta JSON
+import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'order_detail_screen.dart';
 
@@ -9,32 +9,38 @@ class OrderListScreen extends StatefulWidget {
 }
 
 class _OrderListScreenState extends State<OrderListScreen> {
-  List<dynamic> _orders = []; // Lista para armazenar os pedidos
-  bool _isLoading = true; // Variável para indicar carregamento
-  String? _errorMessage; // Variável para armazenar mensagem de erro
+  List<dynamic> _orders = []; // Lista de pedidos
+  bool _isLoading = true; // Indica se os dados estão sendo carregados
+  String? _errorMessage; // Armazena mensagens de erro
 
   // Método para buscar os pedidos da API
   Future<void> fetchOrders() async {
     try {
       final response = await http.get(
-        Uri.parse('http://localhost:8000/api/ApiPedidos'), // Substitua pelo endereço da sua API
+        Uri.parse('http://10.0.2.2:8000/api/ApiPedidos'), // Endpoint para dados principais
       );
 
       if (response.statusCode == 200) {
-        // Decodifica a resposta JSON e atualiza a lista de pedidos
         setState(() {
-          _orders = json.decode(response.body);
+          _orders = json.decode(response.body); // Decodifica a resposta JSON
+          // Ordena a lista por data e número de pedido em ordem decrescente
+          _orders.sort((a, b) {
+            final dateA = DateTime.parse(a['dataPedido']);
+            final dateB = DateTime.parse(b['dataPedido']);
+            if (dateA == dateB) {
+              return b['id'].compareTo(a['id']); // Ordena por número do pedido se as datas forem iguais
+            }
+            return dateB.compareTo(dateA); // Ordena por data
+          });
           _isLoading = false;
         });
       } else {
-        // Caso a API retorne erro
         setState(() {
           _errorMessage = 'Erro ao carregar pedidos: ${response.statusCode}';
           _isLoading = false;
         });
       }
     } catch (error) {
-      // Captura erros de conexão ou outros problemas
       setState(() {
         _errorMessage = 'Erro de conexão: $error';
         _isLoading = false;
@@ -42,11 +48,10 @@ class _OrderListScreenState extends State<OrderListScreen> {
     }
   }
 
-  // Carregar os pedidos assim que a tela abrir
   @override
   void initState() {
     super.initState();
-    fetchOrders();
+    fetchOrders(); // Busca os pedidos ao iniciar a tela
   }
 
   @override
@@ -58,38 +63,51 @@ class _OrderListScreenState extends State<OrderListScreen> {
       body: _isLoading
           ? Center(child: CircularProgressIndicator()) // Exibe carregamento
           : _errorMessage != null
-              ? Center(child: Text(_errorMessage!)) // Exibe erro, se houver
-              : 
-              ListView.builder(
-  itemCount: _orders.length,
-  itemBuilder: (context, index) {
-    final order = _orders[index];
-    return Column(
-      children: [
-        Card(
-          margin: EdgeInsets.all(8.0),
-          child: ListTile(
-            title: Text('Pedido ID: ${order['id']}'),
-            subtitle: Text(
-              'Data: ${order['dataPedido']}\nVeículo: ${order['veiculoId']}',
-            ),
-            trailing: Icon(Icons.arrow_forward),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => OrderDetailScreen(order: order),
+              ? Center(child: Text(_errorMessage!)) // Exibe erro, se existir
+              : ListView.separated(
+                  itemCount: _orders.length,
+                  separatorBuilder: (context, index) => Divider(), // Separador entre os itens
+                  itemBuilder: (context, index) {
+                    final order = _orders[index]; // Dados de um pedido
+                    return GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                OrderDetailScreen(orderId: order['id']), // Passa o ID para a próxima tela
+                          ),
+                        );
+                      },
+                      child: Container(
+                        margin: EdgeInsets.all(8.0),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(8.0),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black12,
+                              blurRadius: 4.0,
+                              spreadRadius: 1.0,
+                            ),
+                          ],
+                        ),
+                        child: ListTile(
+                          leading: Icon(Icons.assignment, color: Colors.blue), // Ícone principal
+                          title: Text(
+                            'Pedido ID: ${order['id']}', // Exibe o ID do pedido
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          subtitle: Text(
+                            'Cliente Carga: ${order['clienteCargaNome']}\n'
+                            'Cliente Descarga: ${order['clienteDescargaNome']}', // Exibe clientes
+                          ),
+                          trailing: Icon(Icons.arrow_forward, color: Colors.grey), // Ícone de seta
+                        ),
+                      ),
+                    );
+                  },
                 ),
-              );
-            },
-          ),
-        ),
-        Divider(color: Colors.grey), // Divisor entre os itens
-      ],
-    );
-  },
-),
-
     );
   }
 }
