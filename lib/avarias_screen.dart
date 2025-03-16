@@ -208,7 +208,7 @@ class _AvariasScreenState extends State<AvariasScreen> {
 
   Future<void> _sendImageToBackend(Uint8List imageBytes) async {
     try {
-      final uri = Uri.parse('https://sua-api.com/UploadFotoPedido');
+      final uri = Uri.parse('http://10.0.2.2:8000/api/ApiPedidos/UploadFotoPedido');
       final request = http.MultipartRequest('POST', uri);
 
       request.fields['TipoFoto'] = 'Avaria';
