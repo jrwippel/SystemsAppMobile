@@ -54,7 +54,7 @@ class _AvariasScreenState extends State<AvariasScreen> {
             child: GestureDetector(
               onTapDown: (TapDownDetails details) {
                 if (_loadedImage != null) {
-                  _addMarker(details.localPosition);
+                  _handleTap(details.localPosition);
                 }
               },
               child: RepaintBoundary(
@@ -78,6 +78,43 @@ class _AvariasScreenState extends State<AvariasScreen> {
     );
   }
 
+  void _handleTap(Offset position) {
+    int? markerIndex = _getMarkerIndexAtPosition(position);
+
+    if (markerIndex != null) {
+      // Perguntar se o usuário deseja remover o marcador
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Remover Marcador'),
+            content: Text('Deseja remover este marcador?'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: Text('Cancelar'),
+              ),
+              TextButton(
+                onPressed: () {
+                  setState(() {
+                    _markers.removeAt(markerIndex);
+                  });
+                  Navigator.of(context).pop();
+                },
+                child: Text('Remover'),
+              ),
+            ],
+          );
+        },
+      );
+    } else {
+      // Adicionar novo marcador
+      _addMarker(position);
+    }
+  }
+
   void _addMarker(Offset position) {
     setState(() {
       _markers.add({
@@ -86,6 +123,7 @@ class _AvariasScreenState extends State<AvariasScreen> {
       });
     });
 
+    // Exibir o diálogo para selecionar o tipo de avaria
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -132,6 +170,18 @@ class _AvariasScreenState extends State<AvariasScreen> {
     );
   }
 
+  int? _getMarkerIndexAtPosition(Offset position) {
+    const double tolerance = 15.0; // Tolerância para detectar cliques próximos
+
+    for (int i = 0; i < _markers.length; i++) {
+      final Offset markerPosition = _markers[i]['position'];
+      if ((markerPosition - position).distance <= tolerance) {
+        return i; // Retorna o índice do marcador encontrado
+      }
+    }
+    return null; // Retorna null se nenhum marcador for encontrado
+  }
+
   Future<void> _captureAndSendImage() async {
     try {
       RenderRepaintBoundary boundary =
@@ -158,7 +208,7 @@ class _AvariasScreenState extends State<AvariasScreen> {
 
   Future<void> _sendImageToBackend(Uint8List imageBytes) async {
     try {
-      final uri = Uri.parse('http://10.0.2.2:8000/api/ApiPedidos/UploadFotoPedido');
+      final uri = Uri.parse('https://sua-api.com/UploadFotoPedido');
       final request = http.MultipartRequest('POST', uri);
 
       request.fields['TipoFoto'] = 'Avaria';
