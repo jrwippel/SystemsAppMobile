@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'photo_screen.dart';
+import 'photo_screen_carga.dart';
+import 'photo_screen_descarga.dart';
 import 'checklist_carga_screen.dart';
+import 'checklist_descarga_screen.dart';
 import 'signature_screen.dart';
 
 class OrderDetailScreen extends StatefulWidget {
@@ -85,7 +87,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               'Data Pretendida',
               _formatDate(orderDetails!['dataPretendida']),
             ),
-            SizedBox(height: 20),
+            //SizedBox(height: 20),
             _buildFieldWithLabel(
               context,
               'Matrícula',
@@ -97,21 +99,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             _buildFieldWithLabel(context, 'Cliente Descarga', orderDetails!['clienteDescargaNome']),
             _buildFieldWithLabel(context, 'Endereço Descarga', orderDetails!['clienteDescargaLocal']),
             SizedBox(height: 30),
+            // Botões estilizados        
 
-            // Botões estilizados
-            _buildModernButton(
-              context,
-              icon: Icons.photo,
-              label: 'Fotos',
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => PhotoScreen(orderId: widget.orderId),
-                  ),
-                );
-              },
-            ),
             SizedBox(height: 20),
             _buildModernButton(
               context,
@@ -125,21 +114,21 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                   ),
                 );
               },
-            ),
-            SizedBox(height: 20),
+            ),          
+               SizedBox(height: 20),
             _buildModernButton(
               context,
-              icon: Icons.edit,
-              label: 'Assinar Carga',
+              icon: Icons.checklist,
+              label: 'CheckList Descarga',
               onPressed: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => SignatureScreen(orderId: widget.orderId),
+                    builder: (context) => ChecklistDesargaScreen(orderId: widget.orderId),
                   ),
                 );
               },
-            ),
+            ),          
           ],
         ),
       ),

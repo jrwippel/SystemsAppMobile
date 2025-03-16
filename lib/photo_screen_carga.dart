@@ -6,8 +6,9 @@ import 'dart:io';
 
 class PhotoScreen extends StatefulWidget {
   final int orderId;
+  final String? horaInicio; // Adicione este campo para receber a hora de início
 
-  const PhotoScreen({Key? key, required this.orderId}) : super(key: key);
+  const PhotoScreen({Key? key, required this.orderId, this.horaInicio}) : super(key: key);
 
   @override
   _PhotoScreenState createState() => _PhotoScreenState();
@@ -29,8 +30,7 @@ class _PhotoScreenState extends State<PhotoScreen> {
     'Capô Dianteiro': 5,
     'Capô Traseiro Aberto': 6,
     'Capô Traseiro Fechado': 7,
-    'Diversos': 10,
-    'Local Estacionamento': 11,
+    'Diversos': 10,  
   };
 
   @override
@@ -43,7 +43,7 @@ class _PhotoScreenState extends State<PhotoScreen> {
   Future<void> _loadExistingPhotos() async {
     try {
       final response = await http.get(
-        Uri.parse('http://10.0.2.2:8000/api/ApiPedidos/${widget.orderId}/photos'),
+        Uri.parse('http://10.0.2.2:8000/api/ApiPedidos/${widget.orderId}/photoscarga'),
       );
 
       if (response.statusCode == 200) {
