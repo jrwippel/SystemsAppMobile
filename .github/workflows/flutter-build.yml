@@ -1,0 +1,43 @@
+name: Build iOS app
+
+on:
+  push:
+    branches:
+      - main  # ou a branch que você quiser monitorar
+  pull_request:
+    branches:
+      - main  # ou a branch que você quiser monitorar
+
+jobs:
+  build:
+    runs-on: macos-latest  # Isso garante que a build será feita em uma máquina macOS
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.7.0'  # Defina a versão do Flutter que você está usando
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build iOS app
+        run: flutter build ios --release --no-codesign  # Use --no-codesign para não precisar de uma chave de assinatura
+
+      - name: Archive iOS app
+        run: |
+          cd ios
+          xcodebuild -workspace Runner.xcworkspace -scheme Runner -sdk iphoneos -configuration Release archive -archivePath $PWD/build/Runner.xcarchive
+
+      - name: Export .ipa
+        run: |
+          xcodebuild -exportArchive -archivePath $PWD/build/Runner.xcarchive -exportPath $PWD/build/Runner.ipa -exportOptionsPlist $PWD/ios/Runner/ExportOptions.plist
+
+      - name: Upload IPA
+        uses: actions/upload-artifact@v2
+        with:
+          name: runner-ipa
+          path: $PWD/build/Runner.ipa
