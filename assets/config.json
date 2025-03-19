@@ -1,0 +1,9 @@
+{
+    "dev": {
+      "apiBaseUrl": "http://10.0.2.2:8000/api"
+    },
+    "prod": {
+      "apiBaseUrl": "https://stradale.azurewebsites.net/api"                     
+    }
+  }
+  

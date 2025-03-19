@@ -2,11 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'photo_screen_carga.dart';
-import 'photo_screen_descarga.dart';
 import 'checklist_carga_screen.dart';
 import 'checklist_descarga_screen.dart';
-import 'signature_screen.dart';
+import 'config_service.dart';
 
 class OrderDetailScreen extends StatefulWidget {
   final int orderId;
@@ -26,9 +24,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   Future<void> fetchOrderDetails() async {
     try {
       final response = await http.get(
-        Uri.parse('http://10.0.2.2:8000/api/ApiPedidos/details/${widget.orderId}'),
+        Uri.parse('${ConfigService.apiBaseUrl}/ApiPedidos/details/${widget.orderId}'), // Endpoint dinâmico
       );
-
       if (response.statusCode == 200) {
         setState(() {
           orderDetails = json.decode(response.body);
@@ -72,63 +69,100 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Detalhes do Pedido #${widget.orderId}'),
+        title: Text('Pedido #${widget.orderId}'),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Informações do pedido
-            _buildRowWithTwoFields(
-              context,
-              'Data do Pedido',
-              _formatDate(orderDetails!['dataPedido']),
-              'Data Pretendida',
-              _formatDate(orderDetails!['dataPretendida']),
+            Card(
+  elevation: 4.0,
+  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+  child: Padding(
+    padding: const EdgeInsets.all(16.0),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: _buildFieldWithLabel(
+                'Data do Pedido',
+                _formatDate(orderDetails!['dataPedido']),
+              ),
             ),
-            //SizedBox(height: 20),
-            _buildFieldWithLabel(
-              context,
-              'Matrícula',
-              '${orderDetails!['veiculoDescricao']} / ${orderDetails!['marcaVeiculo']}',
+            SizedBox(width: 16),
+            Expanded(
+              child: _buildFieldWithLabel(
+                'Status',
+                _getStatus(orderDetails!['horaInicio'], orderDetails!['horaFinal']),
+              ),
             ),
-            _buildFieldWithLabel(context, 'Motorista', orderDetails!['motoristaNome']),
-            _buildFieldWithLabel(context, 'Cliente Carga', orderDetails!['clienteCargaNome']),
-            _buildFieldWithLabel(context, 'Endereço Carga', orderDetails!['clienteCargaLocal']),
-            _buildFieldWithLabel(context, 'Cliente Descarga', orderDetails!['clienteDescargaNome']),
-            _buildFieldWithLabel(context, 'Endereço Descarga', orderDetails!['clienteDescargaLocal']),
-            SizedBox(height: 30),
-            // Botões estilizados        
+          ],
+        ),
+        _buildFieldWithLabel(
+          'Data Pretendida',
+          _formatDate(orderDetails!['dataPretendida']),
+        ),
+        Divider(),
+        _buildFieldWithLabel(
+          'Matrícula',
+          '${orderDetails!['veiculoDescricao']} / ${orderDetails!['marcaVeiculo']}',
+        ),
+        _buildFieldWithLabel('Motorista', orderDetails!['motoristaNome']),
+        _buildFieldWithLabel('Cliente Carga', orderDetails!['clienteCargaNome']),
+        _buildFieldWithLabel('Endereço Carga', orderDetails!['clienteCargaLocal']),
+        _buildFieldWithLabel('Cliente Descarga', orderDetails!['clienteDescargaNome']),
+        _buildFieldWithLabel('Endereço Descarga', orderDetails!['clienteDescargaLocal']),
+      ],
+    ),
+  ),
+),
 
             SizedBox(height: 20),
-            _buildModernButton(
-              context,
-              icon: Icons.checklist,
-              label: 'CheckList Carga',
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ChecklistCargaScreen(orderId: widget.orderId),
-                  ),
-                );
-              },
-            ),          
-               SizedBox(height: 20),
-            _buildModernButton(
-              context,
-              icon: Icons.checklist,
-              label: 'CheckList Descarga',
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ChecklistDesargaScreen(orderId: widget.orderId),
-                  ),
-                );
-              },
-            ),          
+
+            GridView.count(
+  shrinkWrap: true,
+  crossAxisCount: 2,
+  crossAxisSpacing: 10,
+  mainAxisSpacing: 10,
+  physics: NeverScrollableScrollPhysics(),
+  children: [
+    _buildButtonItem(
+      context,
+      icon: Icons.checklist,
+      label: 'CheckList Carga',
+      onPressed: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ChecklistCargaScreen(orderId: widget.orderId),
+          ),
+        );
+      },
+      isEnabled: true, // Sempre habilitado
+    ),
+    _buildButtonItem(
+      context,
+      icon: Icons.checklist,
+      label: 'CheckList Descarga',
+      onPressed: (orderDetails!['horaInicio'] != null && orderDetails!['horaInicio'] != 0)
+          ? () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ChecklistDesargaScreen(orderId: widget.orderId),
+                ),
+              );
+            }
+          : null, // Deixe o onPressed como null para desabilitar nativamente
+      isEnabled: orderDetails!['horaInicio'] != null && orderDetails!['horaInicio'] != 0, // Define o estado
+    ),
+  ],
+)
+
+            
           ],
         ),
       ),
@@ -136,7 +170,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   }
 
   // Campo com rótulo e valor
-  Widget _buildFieldWithLabel(BuildContext context, String label, String value) {
+  Widget _buildFieldWithLabel(String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Column(
@@ -156,47 +190,34 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     );
   }
 
-  // Linha com dois campos (exemplo: Data do Pedido e Data Pretendida)
-  Widget _buildRowWithTwoFields(
-      BuildContext context, String label1, String value1, String label2, String value2) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          child: _buildFieldWithLabel(context, label1, value1),
-        ),
-        SizedBox(width: 20),
-        Expanded(
-          child: _buildFieldWithLabel(context, label2, value2),
-        ),
-      ],
-    );
-  }
-
-  // Botão estilizado com ícone e texto
-  Widget _buildModernButton(BuildContext context,
-      {required IconData icon, required String label, required VoidCallback onPressed}) {
-    return SizedBox(
-      width: double.infinity,
-      height: 60,
-      child: ElevatedButton.icon(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.blueAccent,
-          foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+Widget _buildButtonItem(BuildContext context,
+    {required IconData icon, required String label, required VoidCallback? onPressed, required bool isEnabled}) {
+  return GestureDetector(
+    onTap: isEnabled ? onPressed : null, // Apenas habilita o tap se estiver ativo
+    child: Card(
+      elevation: 4.0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      color: isEnabled ? Colors.white : Colors.grey[300], // Cor muda se desabilitado
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 40, color: isEnabled ? Colors.blue : Colors.grey),
+          SizedBox(height: 10),
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+              color: isEnabled ? Colors.black : Colors.grey,
+            ),
           ),
-        ),
-        icon: Icon(icon, size: 30),
-        label: Text(
-          label,
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-        ),
-        onPressed: onPressed,
+        ],
       ),
-    );
-  }
+    ),
+  );
+}
+
 
   String _formatDate(String dateString) {
     try {
@@ -206,4 +227,16 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       return 'Data inválida';
     }
   }
+
+String _getStatus(dynamic horaInicio, dynamic horaFinal) {
+  if (horaFinal != null && horaFinal != 0) {
+    return 'Finalizado';
+  }
+  if (horaInicio == null || horaInicio == 0) {
+    return 'Não iniciado';
+  }
+  return 'Iniciado';
+}
+
+
 }

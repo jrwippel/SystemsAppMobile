@@ -3,6 +3,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:io';
+import 'config_service.dart';
 
 class PhotoScreenDescarga extends StatefulWidget {
   final int orderId;
@@ -36,8 +37,8 @@ class _PhotoScreenState extends State<PhotoScreenDescarga> {
   Future<void> _loadExistingPhotos() async {
     try {
       final response = await http.get(
-        Uri.parse('http://10.0.2.2:8000/api/ApiPedidos/${widget.orderId}/photosdescarga'),
-      );
+        Uri.parse('${ConfigService.apiBaseUrl}/ApiPedidos/${widget.orderId}/photosdescarga'), // URL dinâmica
+      );    
 
       if (response.statusCode == 200) {
         final photos = List<Map<String, dynamic>>.from(json.decode(response.body));
@@ -107,7 +108,7 @@ class _PhotoScreenState extends State<PhotoScreenDescarga> {
   // Abrir imagem do servidor
   Future<void> _openImageFromServer(String fileName) async {
     try {
-      final url = 'http://10.0.2.2:8000/api/ApiPedidos/download/$fileName';
+      final url = '${ConfigService.apiBaseUrl}/ApiPedidos/download/$fileName';
       final response = await http.get(Uri.parse(url));
 
       if (response.statusCode == 200) {
@@ -133,9 +134,8 @@ class _PhotoScreenState extends State<PhotoScreenDescarga> {
     );
   }
 
-  Future<void> _deleteImage(String fileName) async {
-  final url = Uri.parse('http://10.0.2.2:8000/api/ApiPedidos/DeleteFotoPedido/$fileName');
-
+Future<void> _deleteImage(String fileName) async {
+  final url = Uri.parse('${ConfigService.apiBaseUrl}/ApiPedidos/DeleteFotoPedido/$fileName');
   try {
     final response = await http.delete(url);
 
@@ -149,7 +149,7 @@ class _PhotoScreenState extends State<PhotoScreenDescarga> {
     }
   } catch (error) {
     _showError("Erro de conexão: $error");
-  }
+  }  
 }
 
 
@@ -171,8 +171,9 @@ Future<void> _uploadImages() async {
     for (var image in newPhotos) {
       final request = http.MultipartRequest(
         'POST',
-        Uri.parse('http://10.0.2.2:8000/api/ApiPedidos/UploadFotoPedido'),
+        Uri.parse('${ConfigService.apiBaseUrl}/ApiPedidos/UploadFotoPedido'), // URL dinâmica
       );
+
 
       request.files.add(await http.MultipartFile.fromPath('foto', image['url']));
       request.fields['PedidoId'] = widget.orderId.toString();

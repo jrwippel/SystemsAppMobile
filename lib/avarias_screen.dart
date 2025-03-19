@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
+import 'config_service.dart';
 
 class AvariasScreen extends StatefulWidget {
   final int orderId;
@@ -207,9 +208,11 @@ class _AvariasScreenState extends State<AvariasScreen> {
   }
 
   Future<void> _sendImageToBackend(Uint8List imageBytes) async {
-    try {
-      final uri = Uri.parse('http://10.0.2.2:8000/api/ApiPedidos/UploadFotoPedido');
+    try {     
+
+      final uri = Uri.parse('${ConfigService.apiBaseUrl}/ApiPedidos/UploadFotoPedido');
       final request = http.MultipartRequest('POST', uri);
+
 
       request.fields['TipoFoto'] = 'Avaria';
       request.fields['NomeFoto'] = 'avaria_imagem.png';

@@ -3,6 +3,7 @@ import 'package:signature/signature.dart';
 import 'dart:typed_data'; // Para Uint8List
 import 'package:http/http.dart' as http; // Para requisições HTTP
 import 'dart:convert'; // Adicione esta linha para utilizar `json.decode`
+import 'config_service.dart';
 
 class SignatureScreenDescarga extends StatefulWidget {
   final int orderId;
@@ -41,8 +42,7 @@ class _SignatureScreenState extends State<SignatureScreenDescarga> {
 
   // Método para buscar as assinaturas da API
   Future<void> _fetchSignatures() async {
-    final url = Uri.parse('http://10.0.2.2:8000/api/ApiPedidos/${widget.orderId}/photosassdescarga');
-
+    final url = Uri.parse('${ConfigService.apiBaseUrl}/ApiPedidos/${widget.orderId}/photosassdescarga');
     try {
       final response = await http.get(url);
 
@@ -57,14 +57,14 @@ class _SignatureScreenState extends State<SignatureScreenDescarga> {
         String? clienteFileName = clienteSignature?['nomeArquivo'];
 
         setState(() {
-          if (motoristaFileName != null) {
+        if (motoristaFileName != null) {
             _hasMotoristaSignature = true;
-            motoristaSignatureUrl = 'http://10.0.2.2:8000/api/ApiPedidos/download/$motoristaFileName';
-          }
-          if (clienteFileName != null) {
+            motoristaSignatureUrl = '${ConfigService.apiBaseUrl}/ApiPedidos/download/$motoristaFileName';
+        }
+        if (clienteFileName != null) {
             _hasClienteSignature = true;
-            clienteSignatureUrl = 'http://10.0.2.2:8000/api/ApiPedidos/download/$clienteFileName';
-          }
+            clienteSignatureUrl = '${ConfigService.apiBaseUrl}/ApiPedidos/download/$clienteFileName';
+        }      
           _isLoading = false;
         });
       } else {
@@ -162,8 +162,7 @@ class _SignatureScreenState extends State<SignatureScreenDescarga> {
   }
 
   Future<void> _saveSignatures() async {
-    final url = Uri.parse('http://10.0.2.2:8000/api/ApiPedidos/UploadFotoPedido');
-
+    final url = Uri.parse('${ConfigService.apiBaseUrl}/ApiPedidos/UploadFotoPedido');
     try {
       // Verificar se as assinaturas estão preenchidas
       if (!_controllerMotorista.isNotEmpty || !_controllerCliente.isNotEmpty) {

@@ -13,7 +13,7 @@ dependencies:
   path_provider: ^2.0.15
   image_picker: ^0.8.4+4
   http: ^0.13.6
-  intl: ^0.18.0
+  intl: ^0.18.1
   signature: ^5.0.0
   duration_picker: ^1.2.0
   cupertino_icons: ^1.0.3  
@@ -29,3 +29,4 @@ flutter:
   uses-material-design: true
   assets:
     - assets/avarias.png
+    - assets/config.json

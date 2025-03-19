@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'order_detail_screen.dart';
+import 'config_service.dart';
 
 class OrderListScreen extends StatefulWidget {
   @override
@@ -17,9 +18,8 @@ class _OrderListScreenState extends State<OrderListScreen> {
   Future<void> fetchOrders() async {
     try {
       final response = await http.get(
-        Uri.parse('http://10.0.2.2:8000/api/ApiPedidos'), // Endpoint para dados principais
+        Uri.parse('${ConfigService.apiBaseUrl}/ApiPedidos'), // Endpoint dinâmico
       );
-
       if (response.statusCode == 200) {
         setState(() {
           _orders = json.decode(response.body); // Decodifica a resposta JSON

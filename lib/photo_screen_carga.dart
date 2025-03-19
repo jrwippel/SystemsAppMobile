@@ -3,6 +3,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:io';
+import 'config_service.dart';
 
 class PhotoScreen extends StatefulWidget {
   final int orderId;
@@ -43,9 +44,8 @@ class _PhotoScreenState extends State<PhotoScreen> {
   Future<void> _loadExistingPhotos() async {
     try {
       final response = await http.get(
-        Uri.parse('http://10.0.2.2:8000/api/ApiPedidos/${widget.orderId}/photoscarga'),
+        Uri.parse('${ConfigService.apiBaseUrl}/ApiPedidos/${widget.orderId}/photoscarga'), // Endpoint dinâmico
       );
-
       if (response.statusCode == 200) {
         final photos = List<Map<String, dynamic>>.from(json.decode(response.body));
         setState(() {
@@ -113,10 +113,9 @@ class _PhotoScreenState extends State<PhotoScreen> {
 
   // Abrir imagem do servidor
   Future<void> _openImageFromServer(String fileName) async {
-    try {
-      final url = 'http://10.0.2.2:8000/api/ApiPedidos/download/$fileName';
+    try {     
+      final url = '${ConfigService.apiBaseUrl}/ApiPedidos/download/$fileName';      
       final response = await http.get(Uri.parse(url));
-
       if (response.statusCode == 200) {
         final imageBytes = response.bodyBytes;
         showDialog(
@@ -140,11 +139,10 @@ class _PhotoScreenState extends State<PhotoScreen> {
     );
   }
 
-  Future<void> _deleteImage(String fileName) async {
-  final url = Uri.parse('http://10.0.2.2:8000/api/ApiPedidos/DeleteFotoPedido/$fileName');
-
+Future<void> _deleteImage(String fileName) async {
+  final url = Uri.parse('${ConfigService.apiBaseUrl}/ApiPedidos/DeleteFotoPedido/$fileName'); // Certifique-se que esta é uma Uri válida
   try {
-    final response = await http.delete(url);
+    final response = await http.delete(url); // Uri está correta aqui
 
     if (response.statusCode == 200) {
       setState(() {
@@ -158,7 +156,6 @@ class _PhotoScreenState extends State<PhotoScreen> {
     _showError("Erro de conexão: $error");
   }
 }
-
 
   // Enviar fotos para o servidor (somente novas fotos)
 Future<void> _uploadImages() async {
@@ -178,9 +175,8 @@ Future<void> _uploadImages() async {
     for (var image in newPhotos) {
       final request = http.MultipartRequest(
         'POST',
-        Uri.parse('http://10.0.2.2:8000/api/ApiPedidos/UploadFotoPedido'),
+        Uri.parse('${ConfigService.apiBaseUrl}/ApiPedidos/UploadFotoPedido'), // URL dinâmica
       );
-
       request.files.add(await http.MultipartFile.fromPath('foto', image['url']));
       request.fields['PedidoId'] = widget.orderId.toString();
       request.fields['TipoFoto'] = _photoTypes[image['type']].toString();
