@@ -9,7 +9,7 @@ import 'order_list_screen.dart'; // Tela de configurações
 
 void main() async  {
    WidgetsFlutterBinding.ensureInitialized();    
-  await ConfigService.loadConfig("dev");
+  await ConfigService.loadConfig("prod");
   runApp(const MyApp());
 }
 
